@@ -46,9 +46,8 @@ pipeline {
 
      stage('Checkov') {
             steps {
-                 {
+                 
                     sh 'checkov -d .'
-                }
             }
         }
 
