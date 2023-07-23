@@ -16,6 +16,12 @@ pipeline {
         string(name: 'environment', defaultValue: 'development', description: 'Workspace/environment file to use for deployment')
     }
 
+    stages {
+        stage('Install Checkov') {
+            steps {
+                sh 'pip install checkov'
+            }
+        }
     
 
     stages {
@@ -37,6 +43,15 @@ pipeline {
                 sh 'terraform validate'
             }
         }
+
+     stage('Checkov') {
+            steps {
+                 {
+                    sh 'checkov -d .'
+                }
+            }
+        }
+
         stage('plan') {
             steps {
                 sh 'terraform init'
