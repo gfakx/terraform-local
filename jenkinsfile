@@ -22,6 +22,7 @@ pipeline {
                     string(credentialsId: 'AWS_SECRET_ACCESS_KEY', variable: 'AWS_SECRET_ACCESS_KEY')
                 ]) {
                     // Any steps here can use the AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY environment variables
+                    echo 'AWS Credentials have been set.'
                 }
             }
         }
@@ -34,21 +35,36 @@ pipeline {
         }
         stage('format') {
             steps {
-                sh 'terraform fmt'
+                withCredentials([
+                    string(credentialsId: 'AWS_ACCESS_KEY_ID', variable: 'AWS_ACCESS_KEY_ID'),
+                    string(credentialsId: 'AWS_SECRET_ACCESS_KEY', variable: 'AWS_SECRET_ACCESS_KEY')
+                ]) {
+                    sh 'terraform fmt'
+                }
             }
         }
         stage('validate') {
             steps {
-                sh 'terraform init'
-                sh 'terraform validate'
+                withCredentials([
+                    string(credentialsId: 'AWS_ACCESS_KEY_ID', variable: 'AWS_ACCESS_KEY_ID'),
+                    string(credentialsId: 'AWS_SECRET_ACCESS_KEY', variable: 'AWS_SECRET_ACCESS_KEY')
+                ]) {
+                    sh 'terraform init'
+                    sh 'terraform validate'
+                }
             }
         }
         stage('plan') {
             steps {
-                sh 'terraform init'
-                sh 'terraform workspace select ${environment} || terraform workspace new ${environment}'
-                sh 'terraform plan -out=tfplan'
-                stash includes: 'tfplan', name: 'terraform-plan'
+                withCredentials([
+                    string(credentialsId: 'AWS_ACCESS_KEY_ID', variable: 'AWS_ACCESS_KEY_ID'),
+                    string(credentialsId: 'AWS_SECRET_ACCESS_KEY', variable: 'AWS_SECRET_ACCESS_KEY')
+                ]) {
+                    sh 'terraform init'
+                    sh 'terraform workspace select ${environment} || terraform workspace new ${environment}'
+                    sh 'terraform plan -out=tfplan'
+                    stash includes: 'tfplan', name: 'terraform-plan'
+                }
             }
             post {
                 success {
@@ -63,8 +79,13 @@ pipeline {
         }
         stage('apply') {
             steps {
-                unstash 'terraform-plan'
-                sh 'terraform apply -auto-approve tfplan'
+                withCredentials([
+                    string(credentialsId: 'AWS_ACCESS_KEY_ID', variable: 'AWS_ACCESS_KEY_ID'),
+                    string(credentialsId: 'AWS_SECRET_ACCESS_KEY', variable: 'AWS_SECRET_ACCESS_KEY')
+                ]) {
+                    unstash 'terraform-plan'
+                    sh 'terraform apply -auto-approve tfplan'
+                }
             }
         }
         stage('approve destroy') {
@@ -74,8 +95,13 @@ pipeline {
         }
         stage('destroy') {
             steps {
-                unstash 'terraform-plan'
-                sh 'terraform destroy --auto-approve'
+                withCredentials([
+                    string(credentialsId: 'AWS_ACCESS_KEY_ID', variable: 'AWS_ACCESS_KEY_ID'),
+                    string(credentialsId: 'AWS_SECRET_ACCESS_KEY', variable: 'AWS_SECRET_ACCESS_KEY')
+                ]) {
+                    unstash 'terraform-plan'
+                    sh 'terraform destroy --auto-approve'
+                }
             }
         }
     }
