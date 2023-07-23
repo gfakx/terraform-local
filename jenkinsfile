@@ -21,7 +21,7 @@ pipeline {
             steps {
                 sh 'sudo apt-get update'
                 sh 'sudo apt-get install -y python3 python3-pip' // use appropriate command for your Linux distribution
-                sh 'pip3 install checkov'
+                sh 'sudo pip3 install checkov'
             }
         }
 
