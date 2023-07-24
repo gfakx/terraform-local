@@ -24,6 +24,8 @@ resource "aws_instance" "ec2_example" {
   instance_type = "t2.micro"
   tags = {
     Name = "${terraform.workspace}-instance"
+    ebs_optimized = true
+    monitoring = true
   }
 }
 
